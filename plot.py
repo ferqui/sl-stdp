@@ -174,6 +174,7 @@ class Plot:
         :param acc_history: List of train and test accuracy of each epoch.
         :param file_path: Path (contains filename) to use when saving the object.
         """
+        plt.figure(figsize=(5,5))
         for acc in acc_history:
             if len(acc_history[acc]) != 0:
                 epochs = len(acc_history[acc])
@@ -287,15 +288,15 @@ class Plot:
         # self.inpt_axes, self.inpt_ims = plot_input(
         #     image, inpt, label=batch["label"], axes=self.inpt_axes, ims=self.inpt_ims
         # )
-        # self.spike_ims, self.spike_axes = plot_spikes(
-        #     spikes_, ims=self.spike_ims, axes=self.spike_axes
-        # )
+        self.spike_ims, self.spike_axes = plot_spikes(
+            spikes_, ims=self.spike_ims, axes=self.spike_axes
+        )
         self.in_weights_im = plot_weights(in_square_weights, im=self.in_weights_im)
-        #self.out_weights_im = plot_weights(out_square_weights, im=self.out_weights_im)
-        #if accuracy is not None:
-        #    self.perf_ax = plot_performance(accuracy, ax=self.perf_ax)
-        # self.voltage_ims, self.voltage_axes = plot_voltages(
-        #     voltages_, ims=self.voltage_ims, axes=self.voltage_axes, plot_type="line"
-        # )
+        self.out_weights_im = plot_weights(out_square_weights, im=self.out_weights_im)
+        if accuracy is not None:
+           self.perf_ax = plot_performance(accuracy, ax=self.perf_ax)
+        self.voltage_ims, self.voltage_axes = plot_voltages(
+            voltages_, ims=self.voltage_ims, axes=self.voltage_axes, plot_type="line"
+        )
 
         plt.pause(1e-4)

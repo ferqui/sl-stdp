@@ -173,6 +173,8 @@ class Spiking:
             if infer_test:
                 self.test_network(n_samples=n_test, data_mode="test", shuffle=shuffle_test)
 
+            self.save_result()
+
         print("Epoch progress: %d / %d" % (epoch + 1, self.n_epochs))
 
     def train_network_sim(self, n_samples: int = None, shuffle: bool = False) -> None:
@@ -407,8 +409,8 @@ class Spiking:
             sl_spike_count = self.spikes["Z"].get("s").squeeze().sum()
 
             # Re-present input sample if no spikes.
-            if sl_spike_count <= 0:
-                self.rerun_network_for_inference(ori_image=batch["image"])
+            # if sl_spike_count <= 0:
+            #     self.rerun_network_for_inference(ori_image=batch["image"])
 
             # Get spikes of output neurons.
             spikes = self.spikes["Z"].get("s").squeeze()
@@ -759,5 +761,5 @@ class Spiking:
         for acc in self.acc_history:
             # Only save to text file when accuracy list is not empty.
             if len(self.acc_history[acc]) != 0:
-                self.acc_history[acc].insert(0, "Accuracy of each epoch:")
+                #self.acc_history[acc].insert(0, "Accuracy of each epoch:")
                 self.write_file(self.acc_history[acc], acc + ".txt")

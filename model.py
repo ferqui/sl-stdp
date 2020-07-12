@@ -113,11 +113,14 @@ class Quintana2020(Network):
         output_layer = QuintanaSLNodes(
             n=self.n_outpt,
             traces=True,
-            rest=-45.0,  # Originally -60.0, adjusted for recurrent inhibitory connection.
-            reset=-45.0,
-            thresh=-40.0,
+            rest=0.0,  # Originally -60.0, adjusted for recurrent inhibitory connection.
+            reset=0.0,
+            thresh=75.0,
             tc_decay=10.0,
             tc_trace=20.0,
+            R=32.,
+            tau_inc=10.,
+            tau_dec=5.
         )
 
         # Connections.

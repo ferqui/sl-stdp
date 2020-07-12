@@ -205,6 +205,9 @@ class QuintanaSLNodes(Nodes):
         reset: Union[float, torch.Tensor] = -45.0,
         thresh: Union[float, torch.Tensor] = -40.0,
         tc_decay: Union[float, torch.Tensor] = 10.0,
+        R: Union[float, torch.Tensor] = 32,
+        tau_inc: Union[float, torch.Tensor] = 10.,
+        tau_dec: Union[float, torch.Tensor] = 5.,
         **kwargs,
     ) -> None:
         # language=rst
@@ -242,7 +245,26 @@ class QuintanaSLNodes(Nodes):
         self.register_buffer(
             "decay", torch.empty_like(self.tc_decay)
         )  # Set in compute_decays.
-
+        self.register_buffer("I", torch.FloatTensor())
+        self.register_buffer("X", torch.FloatTensor())
+        self.register_buffer(
+            "tau_inc", torch.tensor(tau_inc)
+        )
+        self.register_buffer(
+            "tau_dec", torch.tensor(tau_dec)
+        )
+        self.register_buffer(
+            "I_decay", torch.empty_like(self.tau_dec)
+        )
+        self.register_buffer(
+            "X_decay", torch.empty_like(self.tau_dec)
+        )
+        self.register_buffer(
+            "C", torch.empty_like(self.tau_dec)
+        )
+        self.register_buffer(
+            "R", torch.tensor(R)
+        )
         self.register_buffer("v", torch.FloatTensor()) 
 
     def forward(self, x: torch.Tensor) -> None:
@@ -254,10 +276,15 @@ class QuintanaSLNodes(Nodes):
         """
         if not self.learning:
             # Decay voltages and adaptive thresholds.
-            self.v = self.decay * (self.rest - self.v)
+            #self.v += self.decay * (self.rest - self.v)
+
+            self.v += self.decay * (self.rest - self.v + self.R*self.I)
+            self.I += self.I_decay * (self.C*self.X - self.I)
+            self.X -= self.X_decay * self.X
+
 
             # Integrate inputs.
-            self.v += x
+            self.X += x
 
         # Check for spiking neurons.
         self.s = self.v >= self.thresh
@@ -273,6 +300,8 @@ class QuintanaSLNodes(Nodes):
         Resets relevant state variables.
         """
         super().reset_state_variables()
+        self.X.fill_(0.)  # Neuron voltages.
+        self.I.fill_(0.)  # Neuron voltages.
         self.v.fill_(self.rest)  # Neuron voltages.
 
     def compute_decays(self, dt) -> None:
@@ -282,6 +311,9 @@ class QuintanaSLNodes(Nodes):
         """
         super().compute_decays(dt=dt)
         self.decay = self.dt / self.tc_decay
+        self.C = (self.tau_dec / self.tau_inc) ** (self.tau_inc / (self.tau_dec - self.tau_inc))
+        self.I_decay = self.dt / self.tau_inc
+        self.X_decay = self.dt / self.tau_dec
 
     def set_batch_size(self, batch_size) -> None:
         # language=rst
@@ -291,4 +323,6 @@ class QuintanaSLNodes(Nodes):
         :param batch_size: Mini-batch size.
         """
         super().set_batch_size(batch_size=batch_size)
+        self.X = torch.zeros(batch_size, *self.shape, device=self.X.device)
+        self.I = torch.zeros(batch_size, *self.shape, device=self.I.device)
         self.v = self.rest * torch.ones(batch_size, *self.shape, device=self.v.device)
