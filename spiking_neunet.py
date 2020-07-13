@@ -243,8 +243,8 @@ class Spiking:
             # exc_spike_count = torch.sum(torch.sum(exc_spike, dim=0), dim=0)
 
             # Re-present input sample if less than five spikes.
-            # if exc_spike_count < 5:
-            #     self.rerun_network(ori_image=batch["image"], clamp=clamp)
+            if exc_spike_count < 5:
+                self.rerun_network(ori_image=batch["image"], clamp=clamp)
 
             if self.debug:
                 self.sl_train_spike.append(batch["label"])
@@ -409,8 +409,8 @@ class Spiking:
             sl_spike_count = self.spikes["Z"].get("s").squeeze().sum()
 
             # Re-present input sample if no spikes.
-            # if sl_spike_count <= 0:
-            #     self.rerun_network_for_inference(ori_image=batch["image"])
+            if sl_spike_count <= 0:
+                self.rerun_network_for_inference(ori_image=batch["image"])
 
             # Get spikes of output neurons.
             spikes = self.spikes["Z"].get("s").squeeze()
